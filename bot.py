@@ -2,13 +2,12 @@
 Simple Bot to reply to Telegram messages taken from the python-telegram-bot examples.
 """
 
+import os
 import logging
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 
-f = open("token.txt","r")
-lines=f.readlines()
-TOKEN = lines[0]
-f.close()
+TOKEN = os.getenv("TELEGRAM_RLADIES_BOT")
+HEROKU_APP_NAME = os.getenv("TELEGRAM_RLADIES_HEROKU")
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -16,14 +15,20 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 
 logger = logging.getLogger(__name__)
 
+def run(updater):
+    PORT = int(os.environ.get("PORT", "8443"))
+    HEROKU_APP_NAME = os.environ.get("HEROKU_APP_NAME")
+    updater.start_webhook(listen="0.0.0.0",
+                          port=PORT,
+                          url_path=TOKEN)
+    updater.bot.set_webhook("https://{}.herokuapp.com/{}".format(HEROKU_APP_NAME, TOKEN))
+
 # Define a few command handlers. These usually take the two arguments update and
 # context. Error handlers also receive the raised TelegramError object in error.
 def start(update, context):
     """Send a message when the command /start is issued."""
     chat_id = update.message.chat_id
     first_name = update.message.from_user.first_name
-    last_name = update.message.from_user.last_name
-    username = update.message.from_user.username
     #update.message.reply_text("Hello {}!".format(first_name))
     context.bot.send_message(chat_id, "Hello {}!".format(first_name))
 
